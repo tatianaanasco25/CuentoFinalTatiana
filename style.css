@@ -4,11 +4,11 @@
     padding: 0;
 }
 
-/* 5. Fondo Rosado Pastel */
+/* Fondo Rosado Pastel */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #ffe5ec; /* Rosado pastel */
-    color: #590d22; /* Color oscuro con alto contraste para legibilidad */
+    background-color: #ffe5ec;
+    color: #590d22;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -19,7 +19,7 @@ body {
 .header {
     text-align: center;
     padding: 15px 20px;
-    background-color: #ffb3c6; /* Rosado pastel para la barra superior */
+    background-color: #ffb3c6;
     width: 100%;
     box-shadow: 0 4px 12px rgba(219, 112, 147, 0.3);
     display: flex;
@@ -79,7 +79,6 @@ body {
     outline: 3px solid #ff4d6d;
 }
 
-/* Estilos Específicos por Tipo de Botón */
 .btn-audio {
     background-color: #590d22;
     color: white;
@@ -105,7 +104,7 @@ body {
     color: white;
 }
 
-/* 4. Botones de Navegación Lateral en Forma de Corazón */
+/* Botones de Navegación Lateral en Forma de Corazón */
 .btn-heart-side {
     position: fixed;
     top: 55%;
@@ -137,13 +136,8 @@ body {
     transform: translateY(-50%) scale(1.0);
 }
 
-.left-heart {
-    left: 20px;
-}
-
-.right-heart {
-    right: 20px;
-}
+.left-heart { left: 20px; }
+.right-heart { right: 20px; }
 
 .heart-icon {
     font-size: 2.2rem;

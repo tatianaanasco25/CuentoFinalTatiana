@@ -1,4 +1,4 @@
-// Configurar la ruta del worker de PDF.js
+// Configurar el worker de PDF.js
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
 // Elementos del DOM
@@ -15,7 +15,7 @@ const birdSoundBtn = document.getElementById('bird-sound-btn');
 
 // Variables de estado
 let pageFlip = null;
-let pagesText = []; // Guarda el texto extraído de cada página para lectura en voz alta
+let pagesText = []; // Guarda el texto procesado de cada página
 let currentScale = 1.0;
 const SCALE_STEP = 0.15;
 const MAX_SCALE = 1.8;
@@ -26,7 +26,24 @@ let birdSoundActive = false;
 let audioCtx = null;
 let birdInterval = null;
 
-// 1. Carga automática del archivo cuento.pdf alojado en el repositorio
+// Gestor de voces en español
+let spanishVoice = null;
+
+function loadSpanishVoice() {
+    if (!('speechSynthesis' in window)) return;
+    const voices = window.speechSynthesis.getVoices();
+    // Prioriza voces en español (es-ES, es-MX, es-US, etc.)
+    spanishVoice = voices.find(v => v.lang.startsWith('es') && (v.lang.includes('ES') || v.lang.includes('MX') || v.name.toLowerCase().includes('spanish')))
+                || voices.find(v => v.lang.startsWith('es'))
+                || null;
+}
+
+if ('speechSynthesis' in window) {
+    loadSpanishVoice();
+    window.speechSynthesis.onvoiceschanged = loadSpanishVoice;
+}
+
+// Carga automática del archivo cuento.pdf
 document.addEventListener('DOMContentLoaded', () => {
     loadPDF('cuento.pdf');
 });
@@ -51,19 +68,31 @@ async function loadPDF(pdfUrl) {
         const pageWidth = viewportInfo.width;
         const pageHeight = viewportInfo.height;
 
-        // Bucle para procesar cada página y extraer texto
         for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
             const page = await pdf.getPage(pageNum);
             
-            // 3. Extraer texto real con PDF.js
-            const textContent = await page.getTextContent();
-            const rawText = textContent.items.map(item => item.str).join(' ');
+            // 1. Extraer texto combinando elementos continuos
+            const textContent = await page.getTextContent({ combineTextItems: true });
             
-            // Normalización Unicode NFC (asegura la correcta lectura de 'ñ' y diacríticos)
-            const cleanText = rawText.normalize('NFC').replace(/\s+/g, ' ').trim();
+            let rawText = '';
+            for (const item of textContent.items) {
+                rawText += item.str;
+                if (item.hasEOL) {
+                    rawText += ' ';
+                }
+            }
+
+            // 2. Normalización Unicode y corrección de espacios alrededor de 'ñ' y tildes
+            let cleanText = rawText.normalize('NFC')
+                .replace(/(\b\w+)\s+([ñÑáéíóúÁÉÍÓÚüÜ])\s+(\w+\b)/gi, '$1$2$3')
+                .replace(/(\b\w+)\s+([ñÑáéíóúÁÉÍÓÚüÜ])/gi, '$1$2')
+                .replace(/([ñÑáéíóúÁÉÍÓÚüÜ])\s+(\w+\b)/gi, '$1$2')
+                .replace(/\s+/g, ' ')
+                .trim();
+
             pagesText.push(cleanText);
 
-            // Renderizado visual en canvas
+            // Renderizado en canvas
             const viewport = page.getViewport({ scale: 1.5 });
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
@@ -99,7 +128,6 @@ async function loadPDF(pdfUrl) {
         const pages = document.querySelectorAll('.page');
         pageFlip.loadFromHTML(pages);
 
-        // Evento al pasar de página
         pageFlip.on('flip', () => {
             updatePageInfo();
             stopSpeech();
@@ -113,7 +141,7 @@ async function loadPDF(pdfUrl) {
 
     } catch (error) {
         console.error('Error al cargar cuento.pdf:', error);
-        loading.innerText = 'No se pudo encontrar "cuento.pdf". Revisa que el archivo esté guardado con ese nombre en tu repositorio.';
+        loading.innerText = 'No se encontró el archivo "cuento.pdf". Asegúrate de que esté alojado en la raíz del repositorio.';
     }
 }
 
@@ -124,7 +152,7 @@ function updatePageInfo() {
     pageInfo.innerText = `Página ${current} de ${total}`;
 }
 
-// 4. Navegación con Corazones Laterales
+// Navegación con Corazones Laterales
 prevBtn.addEventListener('click', () => {
     if (pageFlip) pageFlip.flipPrev();
 });
@@ -133,7 +161,7 @@ nextBtn.addEventListener('click', () => {
     if (pageFlip) pageFlip.flipNext();
 });
 
-// 3. Controles de Zoom para Baja Visión
+// Controles de Zoom para Baja Visión
 zoomInBtn.addEventListener('click', () => {
     if (currentScale < MAX_SCALE) {
         currentScale += SCALE_STEP;
@@ -157,10 +185,10 @@ function applyZoom() {
     bookContainer.style.transform = `scale(${currentScale})`;
 }
 
-// 3. Lectura en Voz Alta con SpeechSynthesis en Español (alumnos con baja visión)
+// Lectura en Voz Alta Fluida en Español
 ttsBtn.addEventListener('click', () => {
     if (!('speechSynthesis' in window)) {
-        alert('Tu navegador no cuenta con la función de síntesis de voz.');
+        alert('Tu navegador no cuenta con soporte de síntesis de voz.');
         return;
     }
 
@@ -177,7 +205,7 @@ function readCurrentPage() {
     const pageIndex = pageFlip.getCurrentPageIndex();
     let textToRead = pagesText[pageIndex] || '';
 
-    // Si la pantalla muestra dos páginas abiertas, incluye el texto de la página contigua
+    // Si la vista está en modo libro desplegado (dos páginas), incluir la página derecha
     if (pageFlip.getOrientation() === 'landscape' && pageIndex + 1 < pagesText.length && pageIndex > 0) {
         if (pagesText[pageIndex + 1]) {
             textToRead += ' ' + pagesText[pageIndex + 1];
@@ -185,16 +213,18 @@ function readCurrentPage() {
     }
 
     if (!textToRead.trim()) {
-        textToRead = "Esta página no contiene texto computable.";
+        textToRead = "Esta página no contiene texto para leer.";
     }
 
-    const sanitizedText = textToRead.normalize('NFC');
-    const utterance = new SpeechSynthesisUtterance(sanitizedText);
-    utterance.lang = 'es-ES';
-    utterance.rate = 0.85; // Ritmo pausado adecuado para niños y alumnos con baja visión
+    // Verificar asignación de voz en español
+    if (!spanishVoice) {
+        loadSpanishVoice();
+    }
 
-    const voices = window.speechSynthesis.getVoices();
-    const spanishVoice = voices.find(v => v.lang.startsWith('es'));
+    const utterance = new SpeechSynthesisUtterance(textToRead);
+    utterance.lang = 'es-ES';
+    utterance.rate = 0.88; // Ritmo pausado y continuo para alumnos con baja visión
+
     if (spanishVoice) {
         utterance.voice = spanishVoice;
     }
@@ -222,7 +252,7 @@ function resetTtsButton() {
     ttsBtn.classList.remove('speaking');
 }
 
-// 6. Sonidos Ambientales de Pájaros (Web Audio API)
+// Canto de Pájaros (Web Audio API)
 birdSoundBtn.addEventListener('click', () => {
     birdSoundActive = !birdSoundActive;
 
