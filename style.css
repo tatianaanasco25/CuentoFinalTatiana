@@ -1,0 +1,225 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* 5. Fondo Rosado Pastel */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #ffe5ec; /* Rosado pastel */
+    color: #590d22; /* Color oscuro con alto contraste para legibilidad */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.header {
+    text-align: center;
+    padding: 15px 20px;
+    background-color: #ffb3c6; /* Rosado pastel para la barra superior */
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(219, 112, 147, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    z-index: 10;
+}
+
+.header h1 {
+    font-size: 2rem;
+    color: #800f2f;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.controls-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 1000px;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 6px 14px;
+    border-radius: 25px;
+    border: 2px solid #ff8fab;
+}
+
+/* Botones Generales */
+.btn {
+    border: none;
+    padding: 10px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.95rem;
+    transition: transform 0.15s, background-color 0.2s, box-shadow 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(0,0,0,0.15);
+}
+
+.btn:focus {
+    outline: 3px solid #ff4d6d;
+}
+
+/* Estilos Específicos por Tipo de Botón */
+.btn-audio {
+    background-color: #590d22;
+    color: white;
+}
+.btn-audio:hover { background-color: #800f2f; }
+.btn-audio.speaking {
+    background-color: #ff4d6d;
+    animation: pulse 1.2s infinite;
+}
+
+.btn-zoom {
+    background-color: #a2d2ff;
+    color: #003049;
+}
+.btn-zoom:hover { background-color: #bde0fe; }
+
+.btn-birds {
+    background-color: #70e000;
+    color: #004b23;
+}
+.btn-birds.active {
+    background-color: #38b000;
+    color: white;
+}
+
+/* 4. Botones de Navegación Lateral en Forma de Corazón */
+.btn-heart-side {
+    position: fixed;
+    top: 55%;
+    transform: translateY(-50%);
+    z-index: 100;
+    width: 70px;
+    height: 70px;
+    background-color: #ff4d6d;
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 6px 16px rgba(255, 77, 109, 0.4);
+    transition: transform 0.2s, background-color 0.2s;
+    clip-path: polygon(
+        50% 15%, 65% 0%, 85% 0%, 100% 20%, 100% 50%, 
+        50% 100%, 0% 50%, 0% 20%, 15% 0%, 35% 0%
+    );
+}
+
+.btn-heart-side:hover {
+    background-color: #c9184a;
+    transform: translateY(-50%) scale(1.15);
+}
+
+.btn-heart-side:active {
+    transform: translateY(-50%) scale(1.0);
+}
+
+.left-heart {
+    left: 20px;
+}
+
+.right-heart {
+    right: 20px;
+}
+
+.heart-icon {
+    font-size: 2.2rem;
+    animation: heartbeat 1.8s infinite;
+}
+
+.page-info {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #590d22;
+    padding: 0 8px;
+    min-width: 90px;
+}
+
+#loading {
+    margin-top: 5px;
+    color: #800f2f;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.book-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 30px 90px;
+    width: 100%;
+    overflow: auto;
+}
+
+.flip-book {
+    display: none;
+    box-shadow: 0 10px 30px rgba(128, 15, 47, 0.25);
+    transition: transform 0.2s ease-out;
+    transform-origin: top center;
+}
+
+.page {
+    background-color: #fff;
+    border: solid 1px #ffccd5;
+    overflow: hidden;
+}
+
+.page canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.stf__wrapper {
+    background-color: transparent !important;
+}
+
+/* Animaciones */
+@keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 77, 109, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 77, 109, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 77, 109, 0); }
+}
+
+@media (max-width: 768px) {
+    .btn-heart-side {
+        width: 55px;
+        height: 55px;
+    }
+    .heart-icon {
+        font-size: 1.6rem;
+    }
+    .left-heart { left: 8px; }
+    .right-heart { right: 8px; }
+    .book-container {
+        padding: 20px 60px;
+    }
+}
